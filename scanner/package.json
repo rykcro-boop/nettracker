@@ -1,0 +1,16 @@
+{
+  "name": "nettracker-scanner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local network discovery agent for NetTracker",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^16.6.1",
+    "nettracker": "file:..",
+    "xml2js": "^0.6.2"
+  }
+}

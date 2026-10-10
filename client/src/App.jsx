@@ -24,6 +24,7 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('nettracker_token') || '')
   const [user, setUser] = useState(null)
   const [records, setRecords] = useState([])
+  const [allDevices, setAllDevices] = useState([])
   const [users, setUsers] = useState([])
   const [activity, setActivity] = useState([])
   const [connectionLogs, setConnectionLogs] = useState([])
@@ -64,15 +65,19 @@ function App() {
       if (autoFilter) params.set('auto', 'true')
       if (typeFilter) params.set('connection_type', typeFilter)
       const query = params.size ? `?${params}` : ''
-      const [devicesResponse, statsResponse] = await Promise.all([
+      const [devicesResponse, statsResponse, allDevicesResponse] = await Promise.all([
         apiFetch(`/api/devices${query}`, { headers }),
         apiFetch('/api/stats', { headers }),
+        params.size ? apiFetch('/api/devices', { headers }) : null,
       ])
       const devicesPayload = await devicesResponse.json()
       const statsPayload = await statsResponse.json()
+      const allDevicesPayload = allDevicesResponse ? await allDevicesResponse.json() : devicesPayload
       if (!devicesResponse.ok) throw new Error(devicesPayload.message || 'Unable to load devices.')
       if (!statsResponse.ok) throw new Error(statsPayload.message || 'Unable to load device statistics.')
+      if (allDevicesResponse && !allDevicesResponse.ok) throw new Error(allDevicesPayload.message || 'Unable to load the device list.')
       setRecords(devicesPayload.devices)
+      setAllDevices(allDevicesPayload.devices)
       setStats(statsPayload)
       setRefreshedAt(Date.now())
 
@@ -115,6 +120,7 @@ function App() {
         if (controller.signal.aborted) return
         setUser(payload.user)
         setRecords(payload.devices)
+        setAllDevices(payload.devices)
         setStats(payload.stats)
         setUsers(payload.users)
         setRefreshedAt(Date.now())
@@ -229,6 +235,7 @@ function App() {
     setToken('')
     setUser(null)
     setRecords([])
+    setAllDevices([])
     setUsers([])
     setActivity([])
     setConnectionLogs([])
@@ -560,7 +567,7 @@ function App() {
         <div className="panel-header"><h3>Connection log</h3><div className="row-actions"><button type="button" className="secondary-button" onClick={() => loadConnectionLogs()}>Refresh</button>{logsLoading && <span className="loading-note">Refreshing...</span>}</div></div>
         <div className="log-filters">
           <label>Event<select value={logEventFilter} onChange={(event) => setLogEventFilter(event.target.value)}><option value="">All events</option><option value="connected">Connected</option><option value="reconnected">Reconnected</option><option value="disconnected">Disconnected</option></select></label>
-          <label>Device<select value={logDeviceFilter} onChange={(event) => setLogDeviceFilter(event.target.value)}><option value="">All devices</option>{records.map((record) => <option key={record.id} value={record.id}>{record.hostname}</option>)}</select></label>
+          <label>Device<select value={logDeviceFilter} onChange={(event) => setLogDeviceFilter(event.target.value)}><option value="">All devices</option>{allDevices.map((record) => <option key={record.id} value={record.id}>{record.hostname}</option>)}</select></label>
           <label>From<input type="date" value={logFrom} onChange={(event) => setLogFrom(event.target.value)} /></label>
           <label>To<input type="date" value={logTo} onChange={(event) => setLogTo(event.target.value)} /></label>
         </div>

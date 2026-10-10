@@ -436,7 +436,7 @@ app.post('/api/scan/report', async (req, res) => {
 
     const { rows: offlineRows } = await client.query(
       `UPDATE devices SET is_online = false, status = 'offline', updated_at = NOW()
-       WHERE is_online = true AND auto_discovered = true AND last_seen < NOW() - INTERVAL '2 minutes'
+       WHERE is_online = true AND last_seen < NOW() - INTERVAL '2 minutes'
        RETURNING id, ip_address;`,
     );
     for (const device of offlineRows) {
